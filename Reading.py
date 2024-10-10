@@ -5,7 +5,7 @@ from fpdf import FPDF
 import zipfile
 import os
 
-# Red CSV file and return data in required format
+# Function to read CSV file and return data in required format
 def read_csv_to_list(file_path):
     data = []
     
@@ -31,21 +31,21 @@ def read_csv_to_list(file_path):
     
     return data
 
-# Function to assign classes based on preferences, grade, and timestamp
+# Assign classes based on preferences, grade, and timestamp
 def assign_classes(students, class_capacities, max_classes):
     # Sort students by grade (descending), then by timestamp (ascending)
     students = sorted(students, key=lambda x: (-x['grade'], x['timestamp']))
     
     assignments = {student['name']: [] for student in students}
 
-    # Temp dictionay for class capacities, to track available spots
+    # Temp dictionary for class capacities, to track available spots
     temp_class_capacities = class_capacities.copy()
     
     for student in students:
         preferences = student['preferences']
         assigned = []
         
-        # Asign by preference
+        # Assign by preference
         for pref in preferences:
             if temp_class_capacities.get(pref, 0) > 0:
                 assigned.append(pref)
@@ -53,7 +53,7 @@ def assign_classes(students, class_capacities, max_classes):
             if len(assigned) == max_classes:  # Only assign up to max_classes
                 break
         
-        # Random classes if less than max_classes are assigned
+        # Random classes if less than max_classes are assgned
         while len(assigned) < max_classes:
             available_classes = [cls for cls, cap in temp_class_capacities.items() if cap > 0]
             if available_classes:
@@ -65,7 +65,7 @@ def assign_classes(students, class_capacities, max_classes):
     
     return assignments
 
-# Genratea PDF schedules for each student
+# Generate PDF schedules for each student
 def generate_pdf_schedule(assignments, output_dir="schedules"):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -86,7 +86,7 @@ def generate_pdf_schedule(assignments, output_dir="schedules"):
         pdf.output(pdf_file)
         print(f"Generated schedule for {student}: {pdf_file}")
 
-# Function to package all PDFs into a ZIP file
+# Pckange all PDFs into a ZIP file
 def package_pdfs_to_zip(output_dir="schedules", zip_filename="schedules.zip"):
     with zipfile.ZipFile(zip_filename, 'w') as zipf:
         # Add all PDF files in the output directory to the zip file
@@ -116,7 +116,7 @@ def main(file_path, class_capacities, max_classes):
             'preferences': preferences
         })
 
-    # Do classes based on preferences, grade, and timestamp
+    # Assing classes based on preferences, grade, and timestamp
     assignments = assign_classes(students, class_capacities, max_classes)
 
     # Make PDF schedules for each student
@@ -129,9 +129,9 @@ def main(file_path, class_capacities, max_classes):
     print(f"Download the file: {zip_file}")
 
 if __name__ == "__main__":
-    # YOU should change these values to any other class capacities or max number of classes a specific studnet can take
+    # YOU SHOULD change these values to any other class capacities or maximum number of classes
     class_capacities = {"Math": 3, "English": 3, "History": 3, "CS": 3, "Chem": 3}
     max_classes = 3
-    file_path = 'data.csv'  # Change your csv do data.csv
+    file_path = 'data.csv'  # Change name of csv to data.csv
     
     main(file_path, class_capacities, max_classes)
