@@ -131,7 +131,7 @@ def main(file_path, class_capacities, max_classes):
 if __name__ == "__main__":
     # YOU SHOULD change these values to any other class capacities or maximum number of classes
     class_capacities = {"Math": 3, "English": 3, "History": 3, "CS": 3, "Chem": 3}
-    max_classes = 1
+    max_classes = 1  # Keep at 1 for seminar day
     file_path = 'data.csv'  # Change name of csv to data.csv
     
     main(file_path, class_capacities, max_classes)
