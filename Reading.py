@@ -5,7 +5,29 @@ from fpdf import FPDF
 import zipfile
 import os
 
-# Function to read CSV file and return data in required format
+cap = 5
+max_classes = 3
+student_file_path = 'data.csv'  # Student preferences CSV
+classes_file_path = 'classes.csv'  # Classes CSV
+
+
+# Function to read the classes and initialize capacities
+def read_classes_from_csv(file_path, cap):
+    class_capacities = {}
+    
+    # Open the CSV file
+    with open(file_path, newline='', encoding='utf-8') as csvfile:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
+            classes = row
+            # Initialize each class with default capacity
+            for cls in classes:
+                class_capacities[cls] = cap
+    
+    return class_capacities
+
+
+# Function to read CSV file and return student data
 def read_csv_to_list(file_path):
     data = []
     
@@ -31,6 +53,7 @@ def read_csv_to_list(file_path):
     
     return data
 
+
 # Assign classes based on preferences, grade, and timestamp
 def assign_classes(students, class_capacities, max_classes):
     # Sort students by grade (descending), then by timestamp (ascending)
@@ -53,7 +76,7 @@ def assign_classes(students, class_capacities, max_classes):
             if len(assigned) == max_classes:  # Only assign up to max_classes
                 break
         
-        # Random classes if less than max_classes are assgned
+        # Random classes if less than max_classes are assigned
         while len(assigned) < max_classes:
             available_classes = [cls for cls, cap in temp_class_capacities.items() if cap > 0]
             if available_classes:
@@ -64,6 +87,7 @@ def assign_classes(students, class_capacities, max_classes):
         assignments[student['name']] = assigned
     
     return assignments
+
 
 # Generate PDF schedules for each student
 def generate_pdf_schedule(assignments, output_dir="schedules"):
@@ -86,7 +110,8 @@ def generate_pdf_schedule(assignments, output_dir="schedules"):
         pdf.output(pdf_file)
         print(f"Generated schedule for {student}: {pdf_file}")
 
-# Pckange all PDFs into a ZIP file
+
+# Package all PDFs into a ZIP file
 def package_pdfs_to_zip(output_dir="schedules", zip_filename="schedules.zip"):
     with zipfile.ZipFile(zip_filename, 'w') as zipf:
         # Add all PDF files in the output directory to the zip file
@@ -98,10 +123,14 @@ def package_pdfs_to_zip(output_dir="schedules", zip_filename="schedules.zip"):
     print(f"Packaged all schedules into: {zip_filename}")
     return zip_filename
 
+
 # Main function to run the process
-def main(file_path, class_capacities, max_classes):
+def main(student_file_path, classes_file_path, cap, max_classes):
+    # Read classes and their capacities from CSV
+    class_capacities = read_classes_from_csv(classes_file_path, cap)
+    
     # Read student data from CSV
-    data = read_csv_to_list(file_path)
+    data = read_csv_to_list(student_file_path)
     
     students = []
     for row in data:
@@ -116,10 +145,10 @@ def main(file_path, class_capacities, max_classes):
             'preferences': preferences
         })
 
-    # Assing classes based on preferences, grade, and timestamp
+    # Assign classes based on preferences, grade, and timestamp
     assignments = assign_classes(students, class_capacities, max_classes)
 
-    # Make PDF schedules for each student
+    # Generate PDF schedules for each student
     generate_pdf_schedule(assignments)
 
     # Package all PDFs into a ZIP file for download
@@ -128,10 +157,6 @@ def main(file_path, class_capacities, max_classes):
     # Auto download
     print(f"Download the file: {zip_file}")
 
+
 if __name__ == "__main__":
-    # YOU SHOULD change these values to any other class capacities or maximum number of classes
-    class_capacities = {"Math": 3, "English": 3, "History": 3, "CS": 3, "Chem": 3}
-    max_classes = 1  # Keep at 1 for seminar day
-    file_path = 'data.csv'  # Change name of csv to data.csv
-    
-    main(file_path, class_capacities, max_classes)
+    main(student_file_path, classes_file_path, cap, max_classes)
