@@ -11,7 +11,7 @@ student_file_path = 'data.csv'  #Student preferences CSV
 classes_file_path = 'classes.csv'  #Classes CSV
 lunch = True  #Set this to True if you want to assign lunch periods
 
-#Reading the classes and initialize capacities
+#Reading the classes and get capacities
 def read_classes_from_csv(file_path, cap):
     class_capacities = {}
     
@@ -20,7 +20,6 @@ def read_classes_from_csv(file_path, cap):
         csvreader = csv.reader(csvfile)
         for row in csvreader:
             classes = row
-            # Initialize each class with default capacity
             for cls in classes:
                 class_capacities[cls] = cap
     
@@ -98,7 +97,7 @@ def generate_pdf_schedule(assignments, output_dir="schedules"):
         pdf.set_font("Arial", size=12)
         
         pdf.cell(200, 10, txt=f"Schedule for {student}", ln=True, align="C")
-        pdf.ln(10)  # Line break
+        pdf.ln(10)
         
         for i, cls in enumerate(classes, 1):
             pdf.cell(200, 10, txt=f"Class {i}: {cls}", ln=True, align="L")
@@ -125,7 +124,7 @@ def main(student_file_path, classes_file_path, cap, max_classes, lunch):
     #Classes from CSV
     class_capacities = read_classes_from_csv(classes_file_path, cap)
     
-    #Rading student data from CSV
+    #Reading student data from CSV
     data = read_csv_to_list(student_file_path)
     
     students = []
@@ -141,7 +140,7 @@ def main(student_file_path, classes_file_path, cap, max_classes, lunch):
             'preferences': preferences
         })
 
-    #Give clases based on preferences, grade, and timestamp
+    #Give classes based on preferences, grade, and timestamp
     assignments = assign_classes(students, class_capacities, max_classes, lunch)
 
     #Make PDF schedules for each student
