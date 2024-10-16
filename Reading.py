@@ -5,17 +5,17 @@ from fpdf import FPDF
 import zipfile
 import os
 
-cap = 5
-max_classes = 3
-student_file_path = 'data.csv'  # Student preferences CSV
-classes_file_path = 'classes.csv'  # Classes CSV
+cap = 5 #Max amount of students in each class
+max_classes = 3 #Max amount of classes student can have in a day
+student_file_path = 'data.csv'  #Student preferences CSV
+classes_file_path = 'classes.csv'  #Classes CSV
+lunch = True  #Set this to True if you want to assign lunch periods
 
-
-# Function to read the classes and initialize capacities
+#Reading the classes and initialize capacities
 def read_classes_from_csv(file_path, cap):
     class_capacities = {}
     
-    # Open the CSV file
+    #Open the CSV file
     with open(file_path, newline='', encoding='utf-8') as csvfile:
         csvreader = csv.reader(csvfile)
         for row in csvreader:
@@ -26,45 +26,37 @@ def read_classes_from_csv(file_path, cap):
     
     return class_capacities
 
-
-# Function to read CSV file and return student data
+#Reading CSV file and return student data
 def read_csv_to_list(file_path):
     data = []
     
-    # Open the CSV file
     with open(file_path, newline='', encoding='utf-8') as csvfile:
         csvreader = csv.reader(csvfile)
         
-        # Skip the header row
         next(csvreader)
         
-        # Iterate through the rows
         for row in csvreader:
-            # Extract the timestamp, name, and subjects
             timestamp = row[0]
             name = row[1]
             subjects = row[2:]
             
-            # Calculate the number of subjects
             subject_count = len(subjects)
-            
-            # Append the row in the required format
+
             data.append([timestamp, name, subject_count] + subjects)
     
     return data
 
-
-# Assign classes based on preferences, grade, and timestamp
-def assign_classes(students, class_capacities, max_classes):
+#Give classes based on preferences, grade, and timestamp
+def assign_classes(students, class_capacities, max_classes, lunch=False):
     # Sort students by grade (descending), then by timestamp (ascending)
     students = sorted(students, key=lambda x: (-x['grade'], x['timestamp']))
     
     assignments = {student['name']: [] for student in students}
 
-    # Temp dictionary for class capacities, to track available spots
+    # Temp dict for class capacities, to track open spots
     temp_class_capacities = class_capacities.copy()
     
-    for student in students:
+    for idx, student in enumerate(students):
         preferences = student['preferences']
         assigned = []
         
@@ -73,23 +65,29 @@ def assign_classes(students, class_capacities, max_classes):
             if temp_class_capacities.get(pref, 0) > 0:
                 assigned.append(pref)
                 temp_class_capacities[pref] -= 1
-            if len(assigned) == max_classes:  # Only assign up to max_classes
+            if len(assigned) == max_classes:
                 break
         
-        # Random classes if less than max_classes are assigned
+        #Rando classes if less than max_classes are assigned
         while len(assigned) < max_classes:
             available_classes = [cls for cls, cap in temp_class_capacities.items() if cap > 0]
             if available_classes:
                 rand_class = random.choice(available_classes)
                 assigned.append(rand_class)
                 temp_class_capacities[rand_class] -= 1
+
+        #Lunch period if lunch variable is set to True
+        if lunch:
+            if idx % 2 == 0:  # Assign half to have lunch before the last two periods
+                assigned.insert(-2, "Lunch")
+            else:  # Assign the other half to have lunch just before the last period
+                assigned.insert(-1, "Lunch")
         
         assignments[student['name']] = assigned
     
     return assignments
 
-
-# Generate PDF schedules for each student
+#Make PDF schedules for each student
 def generate_pdf_schedule(assignments, output_dir="schedules"):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -105,16 +103,15 @@ def generate_pdf_schedule(assignments, output_dir="schedules"):
         for i, cls in enumerate(classes, 1):
             pdf.cell(200, 10, txt=f"Class {i}: {cls}", ln=True, align="L")
         
-        # Save PDF for each student
+        #Save PDFs for each student
         pdf_file = os.path.join(output_dir, f"{student}_schedule.pdf")
         pdf.output(pdf_file)
         print(f"Generated schedule for {student}: {pdf_file}")
 
-
-# Package all PDFs into a ZIP file
+#Package PDFs into ZIP file
 def package_pdfs_to_zip(output_dir="schedules", zip_filename="schedules.zip"):
     with zipfile.ZipFile(zip_filename, 'w') as zipf:
-        # Add all PDF files in the output directory to the zip file
+        #Put alll PDF files in the outputting directory to the zip file
         for root, _, files in os.walk(output_dir):
             for file in files:
                 if file.endswith(".pdf"):
@@ -123,13 +120,12 @@ def package_pdfs_to_zip(output_dir="schedules", zip_filename="schedules.zip"):
     print(f"Packaged all schedules into: {zip_filename}")
     return zip_filename
 
-
 # Main function to run the process
-def main(student_file_path, classes_file_path, cap, max_classes):
-    # Read classes and their capacities from CSV
+def main(student_file_path, classes_file_path, cap, max_classes, lunch):
+    #Classes from CSV
     class_capacities = read_classes_from_csv(classes_file_path, cap)
     
-    # Read student data from CSV
+    #Rading student data from CSV
     data = read_csv_to_list(student_file_path)
     
     students = []
@@ -145,18 +141,16 @@ def main(student_file_path, classes_file_path, cap, max_classes):
             'preferences': preferences
         })
 
-    # Assign classes based on preferences, grade, and timestamp
-    assignments = assign_classes(students, class_capacities, max_classes)
+    #Give clases based on preferences, grade, and timestamp
+    assignments = assign_classes(students, class_capacities, max_classes, lunch)
 
-    # Generate PDF schedules for each student
+    #Make PDF schedules for each student
     generate_pdf_schedule(assignments)
 
-    # Package all PDFs into a ZIP file for download
+    #Package PDFs into ZIP file for download
     zip_file = package_pdfs_to_zip()
 
-    # Auto download
     print(f"Download the file: {zip_file}")
 
-
 if __name__ == "__main__":
-    main(student_file_path, classes_file_path, cap, max_classes)
+    main(student_file_path, classes_file_path, cap, max_classes, lunch)
