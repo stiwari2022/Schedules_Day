@@ -1,3 +1,4 @@
+"Timestamp","Name","Grade","Email","Pref 1","Pref 2", "Pref 3","Pref 4"
 "2024/06/17 03:00:44 AM AST","Taylor","9","taylor@example.com","Math","CS","Basketball","English"
 "2024/10/10 02:13:54 AM AST","Morgan","10","morgan@example.com","Basketball","History","CS","Gym"
 "2024/01/16 04:34:20 PM AST","Person","11","person@example.com","CS","English","Bio","Basketball"
